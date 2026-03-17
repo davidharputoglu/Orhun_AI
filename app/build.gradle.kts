@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android-application)
     alias(libs.plugins.jetbrains-kotlin-android)
+    alias(libs.plugins.jetbrains-kotlin-ksp)
     alias(libs.plugins.compose.compiler)
 }
 
@@ -74,7 +75,7 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     implementation(libs.mlkit.translate)
     implementation(libs.mlkit.digital.ink)
-    annotationProcessor(libs.androidx.room.compiler)
+    ksp(libs.androidx.room.compiler)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
