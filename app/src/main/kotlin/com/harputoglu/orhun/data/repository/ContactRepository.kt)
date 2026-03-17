@@ -1,0 +1,52 @@
+package com.harputoglu.orhun.data.repository
+
+import android.content.Context
+import android.provider.ContactsContract
+import com.harputoglu.orhun.util.PhoneticMatcher
+
+data class Contact(val id: String, val name: String, val phoneNumber: String?)
+
+class ContactRepository(private val context: Context) {
+
+    fun searchContacts(query: String): List<Contact> {
+        val contacts = getAllContacts()
+        return contacts.filter { contact ->
+            PhoneticMatcher.isMatch(query, contact.name)
+        }
+    }
+
+    private fun getAllContacts(): List<Contact> {
+        val contactList = mutableListOf<Contact>()
+        val contentResolver = context.contentResolver
+        val cursor = contentResolver.query(
+            ContactsContract.Contacts.CONTENT_URI,
+            null, null, null, null
+        )
+
+        cursor?.use {
+            if (it.count > 0) {
+                while (it.moveToNext()) {
+                    val id = it.getString(it.getColumnIndex(ContactsContract.Contacts._ID))
+                    val name = it.getString(it.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME))
+                    
+                    var phoneNumber: String? = null
+                    if (it.getInt(it.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER)) > 0) {
+                        val phoneCursor = contentResolver.query(
+                            ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                            null,
+                            ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
+                            arrayOf(id), null
+                        )
+                        phoneCursor?.use { pc ->
+                            if (pc.moveToFirst()) {
+                                phoneNumber = pc.getString(pc.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER))
+                            }
+                        }
+                    }
+                    contactList.add(Contact(id, name, phoneNumber))
+                }
+            }
+        }
+        return contactList
+    }
+}

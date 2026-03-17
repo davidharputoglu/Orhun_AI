@@ -1,0 +1,21 @@
+# Android
+build/
+*.apk
+*.aar
+*.jks
+*.keystore
+
+# Kotlin / Java
+.gradle/
+app/build/
+*.class
+*.jar
+
+# IDE (Android Studio / IntelliJ)
+.idea/
+*.iml
+.DS_Store
+captures/
+
+# Local configuration
+local.properties
