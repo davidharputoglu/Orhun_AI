@@ -13,6 +13,7 @@ class UserPreferences(context: Context) {
         private const val KEY_CURRENT_VOICE_ID = "current_voice_id"
         private const val KEY_VOICE_EMOTION = "voice_emotion"
         private const val KEY_AUTO_EMOTION = "auto_emotion"
+        private const val KEY_GAMER_MODE = "gamer_mode"
     }
 
     var downloadPath: String?
@@ -30,6 +31,10 @@ class UserPreferences(context: Context) {
     var autoEmotionEnabled: Boolean
         get() = prefs.getBoolean(KEY_AUTO_EMOTION, false)
         set(value) = prefs.edit().putBoolean(KEY_AUTO_EMOTION, value).apply()
+
+    var gamerModeEnabled: Boolean
+        get() = prefs.getBoolean(KEY_GAMER_MODE, false)
+        set(value) = prefs.edit().putBoolean(KEY_GAMER_MODE, value).apply()
 
     var notificationSoundEnabled: Boolean
         get() = prefs.getBoolean(KEY_NOTIF_SOUND, true)

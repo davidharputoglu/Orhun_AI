@@ -2,6 +2,8 @@ package com.harputoglu.orhun.util
 
 import android.content.Context
 import android.view.KeyEvent
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
 import com.harputoglu.orhun.service.OrhunAccessibilityService
 
 class CommandProcessor(private val context: Context) {
@@ -39,7 +41,7 @@ class CommandProcessor(private val context: Context) {
         // 1. Baisser le son du média en cours
         sendMediaCommand("DUCK_START")
         
-        // 2. Jouer l'annonce (via un MediaPlayer temporaire ou BroadcastActivity)
+        // 2. Jouer l'annonce
         val intent = android.content.Intent(context, com.harputoglu.orhun.ui.BroadcastActivity::class.java).apply {
             putExtra("TYPE", "VOICE_ANNOUNCEMENT")
             putExtra("AUDIO_URL", audioUrl)
@@ -47,7 +49,20 @@ class CommandProcessor(private val context: Context) {
         }
         context.startActivity(intent)
         
-        // Note: Le DUCK_END sera envoyé par la BroadcastActivity quand l'audio sera fini
+        // 3. Enregistrer dans l'historique
+        saveToHistory("Annonce Vocale", "VOICE", audioUrl)
+    }
+
+    private fun saveToHistory(title: String, type: String, url: String) {
+        val entity = com.harputoglu.orhun.data.local.entity.MediaEntity(
+            title = title,
+            type = type,
+            url = url
+        )
+        // Utilisation d'une coroutine simple pour l'enregistrement asynchrone
+        kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            com.harputoglu.orhun.OrhunApp.database.mediaDao().insertMedia(entity)
+        }
     }
 
     private fun sendMediaCommand(action: String, data: String = "") {
@@ -72,6 +87,7 @@ class CommandProcessor(private val context: Context) {
             addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
         }
         context.startActivity(intent)
+        saveToHistory(title, "VIDEO", url)
     }
 
     private fun launchApp(packageName: String) {
@@ -89,6 +105,7 @@ class CommandProcessor(private val context: Context) {
             addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
         }
         context.startActivity(intent)
+        saveToHistory(content.take(30), type, content)
     }
 
     private fun openTeletext() {

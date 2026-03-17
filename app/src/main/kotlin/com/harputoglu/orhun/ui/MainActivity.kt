@@ -17,23 +17,46 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Gamepad
+import androidx.compose.material.icons.filled.PushPin
+import androidx.compose.material.icons.outlined.OutlinedFlag
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.material3.Card
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.activity.ComponentActivity
 import androidx.compose.material3.Text
+import androidx.compose.material3.Switch
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Button
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.PaddingValues
+import android.os.Build
+import android.content.Intent
+import com.harputoglu.orhun.OrhunApp
 import com.harputoglu.orhun.service.OverlayService
 import com.harputoglu.orhun.ui.theme.OrhunTheme
 
@@ -130,13 +153,34 @@ fun RemoteControlUI() {
             )
         }
         
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Default.Gamepad, contentDescription = null, modifier = Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Mode Gamer (Cast plein écran)", style = MaterialTheme.typography.labelMedium)
+            Spacer(modifier = Modifier.width(8.dp))
+            androidx.compose.material3.Switch(
+                checked = userPrefs.gamerModeEnabled,
+                onCheckedChange = { 
+                    userPrefs.gamerModeEnabled = it
+                    if (it) {
+                        // Action de lancement du miroir système
+                        val intent = Intent(android.provider.Settings.ACTION_CAST_SETTINGS)
+                        context.startActivity(intent)
+                    }
+                },
+                modifier = Modifier.scale(0.8f)
+            )
+        }
+        
         Spacer(modifier = Modifier.height(16.dp))
         
         EmotionSelectorUI()
 
         Spacer(modifier = Modifier.height(16.dp))
         
-        VoiceGalleryUI()
+        MediaHistoryUI()
 
         Spacer(modifier = Modifier.height(16.dp))
         
@@ -146,8 +190,6 @@ fun RemoteControlUI() {
     }
 }
 
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Language
 
 @androidx.compose.material3.OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
@@ -188,6 +230,73 @@ fun EmotionSelectorUI() {
                         { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
                     } else null
                 )
+            }
+        }
+    }
+}
+
+@Composable
+fun MediaHistoryUI() {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val history by remember { 
+        com.harputoglu.orhun.OrhunApp.database.mediaDao().getAllMedia() 
+    }.collectAsState(initial = emptyList())
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Default.History, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Dernières diffusions sur la TV", style = MaterialTheme.typography.titleMedium)
+        }
+        
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        androidx.compose.foundation.lazy.LazyColumn(
+            modifier = Modifier.height(150.dp)
+        ) {
+            items(history) { media ->
+                MediaHistoryItem(media)
+            }
+        }
+    }
+}
+
+@Composable
+fun MediaHistoryItem(media: com.harputoglu.orhun.data.local.entity.MediaEntity) {
+    val sdf = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
+    Card(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Row(modifier = Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            val icon = when(media.type) {
+                "VIDEO" -> Icons.Default.PlayCircle
+                "IMAGE" -> Icons.Default.Image
+                "VOICE" -> Icons.Default.Mic
+                else -> Icons.Default.Link
+            }
+            Icon(icon, contentDescription = null, modifier = Modifier.size(24.dp), tint = MaterialTheme.colorScheme.secondary)
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(media.title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                Text(sdf.format(java.util.Date(media.timestamp)), style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+            }
+            
+            IconButton(onClick = { 
+                kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                    com.harputoglu.orhun.OrhunApp.database.mediaDao().updateMedia(media.copy(isPinned = !media.isPinned))
+                }
+            }) {
+                Icon(
+                    if (media.isPinned) Icons.Default.PushPin else Icons.Default.OutlinedFlag, 
+                    contentDescription = "Épingler",
+                    tint = if (media.isPinned) MaterialTheme.colorScheme.primary else Color.Gray,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+
+            IconButton(onClick = { /* Rediffuser */ }) {
+                Icon(Icons.Default.Refresh, contentDescription = "Renvoyer")
             }
         }
     }

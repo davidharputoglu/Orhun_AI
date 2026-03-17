@@ -10,6 +10,7 @@ build/
 app/build/
 *.class
 *.jar
+!gradle/wrapper/gradle-wrapper.jar
 
 # IDE (Android Studio / IntelliJ)
 .idea/
