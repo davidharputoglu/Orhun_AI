@@ -85,3 +85,24 @@ fun AnnouncementDisplay(text: String) {
         modifier = Modifier.padding(16.dp)
     )
 }
+
+@Composable
+fun VoiceAnnouncementDisplay(audioUrl: String, onFinished: () -> Unit) {
+    androidx.compose.runtime.LaunchedEffect(audioUrl) {
+        // Simulation de lecture audio
+        kotlinx.coroutines.delay(5000)
+        onFinished()
+    }
+
+    Column(
+        modifier = Modifier
+            .padding(32.dp)
+            .background(MaterialTheme.colorScheme.primaryContainer, shape = MaterialTheme.shapes.large)
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text("Lecture de l'annonce vocale...", style = MaterialTheme.typography.titleMedium)
+        Spacer(modifier = Modifier.height(16.dp))
+        androidx.compose.material3.LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+    }
+}

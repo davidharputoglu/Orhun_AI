@@ -1,3 +1,5 @@
+package com.harputoglu.orhun.util
+
 data class VoiceModel(
     val id: String,
     val author: String,
