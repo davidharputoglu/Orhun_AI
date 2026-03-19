@@ -47,7 +47,7 @@ APP_NAME="Gradle"
 APP_BASE_NAME=`basename "$0"`
 
 # Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.
-DEFAULT_JVM_OPTS='"-Xmx64m" "-Xms64m"'
+DEFAULT_JVM_OPTS='"-Xmx1024m" "-Xms512m"'
 
 # Use the maximum available, or at least 512M, for a 32-bit JVM.
 case "`uname`" in
