@@ -2,6 +2,7 @@ package com.harputoglu.orhun.data.local.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.Update
 import androidx.room.Query
 import com.harputoglu.orhun.data.local.entity.MediaEntity
 import kotlinx.coroutines.flow.Flow
@@ -14,7 +15,7 @@ interface MediaDao {
     @Insert
     suspend fun insertMedia(media: MediaEntity)
 
-    @androidx.room.Update
+    @Update
     suspend fun updateMedia(media: MediaEntity)
 
     @Query("DELETE FROM media_history")
